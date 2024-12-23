@@ -1,0 +1,11 @@
+torch
+numpy
+pandas
+seaborn
+pydub
+simpleaudio
+mido
+matplotlib
+music21
+wandb
+tqdm
