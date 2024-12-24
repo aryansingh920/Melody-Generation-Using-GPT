@@ -8,7 +8,6 @@ Filename: test_visualisation.py
 Relative Path: test_visualisation.py
 """
 
-# test_visualization.py
 import matplotlib.pyplot as plt
 import numpy as np
 import json
@@ -26,23 +25,23 @@ def create_loss_comparison_plot(results: Dict[str, Dict[str, Dict[str, Any]]]):
     x = np.arange(len(models))
     width = 0.35
 
-    # Plot test losses
+    # Plot test losses (and baseline) for each test file
     for i, test_file in enumerate(test_files):
         test_losses = [results[model][test_file]['test_loss']
                        for model in models]
         baseline_losses = [results[model][test_file]
                            ['baseline_loss'] for model in models]
 
+        # Test loss bars
         plt.bar(x + i * width, test_losses, width,
-                label=f'{test_file.split(".")[0]} (Model)',
-                alpha=0.8)
+                label=f'{test_file} (Test Loss)', alpha=0.8)
+        # Baseline loss bars (overlaid with alpha for clarity)
         plt.bar(x + i * width, baseline_losses, width,
-                label=f'{test_file.split(".")[0]} (Baseline)',
-                alpha=0.3)
+                label=f'{test_file} (Baseline)', alpha=0.3)
 
     plt.xlabel('Model Configuration')
     plt.ylabel('Loss')
-    plt.title('Model Performance on Test Sets')
+    plt.title('Model Performance on Test Sets (Loss)')
     plt.xticks(x + width / 2, models, rotation=45)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
@@ -66,7 +65,7 @@ def create_improvement_heatmap(results: Dict[str, Dict[str, Dict[str, Any]]]):
     sns.heatmap(improvement_matrix,
                 annot=True,
                 fmt='.2f',
-                xticklabels=[f.split('.')[0] for f in test_files],
+                xticklabels=test_files,
                 yticklabels=models,
                 cmap='YlOrRd')
     plt.title('Improvement Over Baseline (Ratio)')
@@ -92,11 +91,9 @@ def create_perplexity_comparison(results: Dict[str, Dict[str, Dict[str, Any]]]):
                                  ['baseline_perplexity'] for model in models]
 
         plt.bar(x + i * width, perplexities, width,
-                label=f'{test_file.split(".")[0]} (Model)',
-                alpha=0.8)
+                label=f'{test_file} (Model)', alpha=0.8)
         plt.bar(x + i * width, baseline_perplexities, width,
-                label=f'{test_file.split(".")[0]} (Baseline)',
-                alpha=0.3)
+                label=f'{test_file} (Baseline)', alpha=0.3)
 
     plt.xlabel('Model Configuration')
     plt.ylabel('Perplexity (lower is better)')

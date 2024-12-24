@@ -10,27 +10,29 @@ Relative Path: train_with_viz.py
 
 import torch
 import matplotlib.pyplot as plt
-from gpt_downsizing import create_custom_config, create_custom_config_1, create_custom_config_2, create_custom_config_3
-from gpt import GPTLanguageModel, generate_melody, decode, estimate_loss, get_batch
 import json
 import os
 from tqdm import tqdm
 import wandb
 
+from gpt_downsizing import create_custom_config, create_custom_config_1, create_custom_config_2, create_custom_config_3
+from gpt import GPTLanguageModel, generate_melody, decode, estimate_loss, get_batch
+from MelodyDataset import ModelConfig
+
 
 def save_model_and_metrics(model, config, training_history, metrics, name, save_dir='saved_models'):
-    """Save model weights, config, and training metrics"""
+    """Save model weights, config, and training metrics."""
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    # Save model weights
     model_path = os.path.join(save_dir, f'{name}_model.pt')
     torch.save(model.state_dict(), model_path)
 
-    # Save config and metrics
     metrics_path = os.path.join(save_dir, f'{name}_metrics.json')
-    config_dict = {k: str(v) if isinstance(v, torch.device) else v
-                   for k, v in config.__dict__.items()}
+    config_dict = {
+        k: str(v) if isinstance(v, torch.device) else v
+        for k, v in config.__dict__.items()
+    }
 
     metrics_data = {
         'config': config_dict,
@@ -48,10 +50,15 @@ def save_model_and_metrics(model, config, training_history, metrics, name, save_
 
 
 def test_configs_with_tracking():
+    """
+    Trains multiple configurations (Original, Deeper_Thinner, Wider_Shallower)
+    and tracks them with wandb. Returns the best model based on final val loss.
+    """
     configs = [
         ("Original", create_custom_config()),
         ("Deeper_Thinner", create_custom_config_1()),
         ("Wider_Shallower", create_custom_config_2()),
+        # Uncomment if you want to test the bigger config
         # ("Custom_Config_3", create_custom_config_3())
     ]
 
@@ -60,25 +67,24 @@ def test_configs_with_tracking():
 
     for name, config in configs:
         print(f"\nTesting {name} Configuration:")
-        print("\n".join(f"{key}: {value}" for key,
-              value in config.__dict__.items()))
+        for key, value in config.__dict__.items():
+            print(f"{key}: {value}")
 
-        # Initialize wandb
+        # Init wandb
         wandb.init(project="gpt-melody-generation", name=name,
                    config=config.__dict__, reinit=True)
 
-        # Initialize the model
-        model = GPTLanguageModel().to(config.device)
+        # Create the model with the config
+        model = GPTLanguageModel(
+            config, vocab_size_override=None).to(config.device)
         optimizer = torch.optim.AdamW(
             model.parameters(), lr=config.learning_rate)
 
-        # Training history
         training_history = {'train_losses': [], 'val_losses': []}
 
-        # Create progress bar
         pbar = tqdm(range(config.max_iters), desc=f"Training {name}")
-
         for iter in pbar:
+            # Evaluate losses at intervals
             if iter % config.eval_interval == 0 or iter == config.max_iters - 1:
                 losses = estimate_loss()
                 print(
@@ -86,14 +92,12 @@ def test_configs_with_tracking():
                 training_history['train_losses'].append(losses['train'])
                 training_history['val_losses'].append(losses['val'])
 
-                # Log to wandb
                 wandb.log({
                     "train_loss": losses['train'],
                     "val_loss": losses['val'],
                     "step": iter
                 })
 
-                # Update progress bar
                 pbar.set_postfix({
                     'train_loss': f"{losses['train']:.4f}",
                     'val_loss': f"{losses['val']:.4f}"
@@ -105,24 +109,22 @@ def test_configs_with_tracking():
             loss.backward()
             optimizer.step()
 
-        # Plot learning curves
         steps = list(range(0, config.max_iters + 1, config.eval_interval))
-        plt.plot(steps[:len(training_history['train_losses'])], training_history['train_losses'],
-                 label=f'{name} (Train)', linestyle='-')
-        plt.plot(steps[:len(training_history['val_losses'])], training_history['val_losses'],
-                 label=f'{name} (Val)', linestyle='--')
+        # Just in case the final step isn't exactly at max_iters, slice the arrays properly
+        plt.plot(steps[:len(training_history['train_losses'])],
+                 training_history['train_losses'], label=f'{name} (Train)', linestyle='-')
+        plt.plot(steps[:len(training_history['val_losses'])],
+                 training_history['val_losses'], label=f'{name} (Val)', linestyle='--')
 
         # Generate sample melody
-        prompt = "R F G A "  # Example prompt for melody
+        prompt = "R F G A "
         generated_melody = generate_melody(prompt, max_new_tokens=200)
-        print(f"\nGenerated melody for {name}:")
-        print(generated_melody)
+        print(f"\nGenerated melody for {name}:\n{generated_melody}")
 
         final_train_loss = training_history['train_losses'][-1]
         final_val_loss = training_history['val_losses'][-1]
         overfitting_metric = final_val_loss - final_train_loss
 
-        # Calculate and save metrics
         metrics = {
             'final_train_loss': float(final_train_loss),
             'final_val_loss': float(final_val_loss),
@@ -131,7 +133,7 @@ def test_configs_with_tracking():
             'generated_sample': generated_melody
         }
 
-        # Log final metrics to wandb
+        # Log final metrics
         wandb.log(metrics)
 
         # Save model and metrics
@@ -148,7 +150,6 @@ def test_configs_with_tracking():
             "training_history": training_history
         }
         all_results.append(result)
-
         wandb.finish()
 
     plt.xlabel('Training Steps')
@@ -160,22 +161,19 @@ def test_configs_with_tracking():
     plt.savefig('output/loss_comparison.png')
     plt.close()
 
-    # Print comparison table
     print("\nPerformance Comparison:")
     print("=" * 80)
     print(f"{'Config':<20} {'Final Train Loss':<15} {'Final Val Loss':<15} {'Overfitting':<15}")
     print("-" * 80)
     for result in all_results:
-        print(
-            f"{result['name']:<20} {result['final_train_loss']:<15.4f} {result['final_val_loss']:<15.4f} {result['overfitting_metric']:<15.4f}")
+        print(f"{result['name']:<20} {result['final_train_loss']:<15.4f} {result['final_val_loss']:<15.4f} {result['overfitting_metric']:<15.4f}")
 
     create_final_comparison_plot(all_results)
 
-    # Find best model based on validation loss
+    # Find best model based on val loss
     best_model_idx = min(range(len(all_results)),
                          key=lambda i: all_results[i]['final_val_loss'])
     best_result = all_results[best_model_idx]
-
     print(
         f"\nBest model: {best_result['name']} with validation loss: {best_result['final_val_loss']:.4f}")
 
@@ -191,9 +189,9 @@ def create_final_comparison_plot(results):
     x = range(len(names))
     width = 0.35
 
-    plt.bar([i - width / 2 for i in x], train_losses,
+    plt.bar([i - width/2 for i in x], train_losses,
             width, label='Train Loss', color='skyblue')
-    plt.bar([i + width / 2 for i in x], val_losses, width,
+    plt.bar([i + width/2 for i in x], val_losses, width,
             label='Validation Loss', color='lightcoral')
 
     plt.xlabel('Configuration')

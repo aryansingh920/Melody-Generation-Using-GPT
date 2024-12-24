@@ -9,3 +9,4 @@ matplotlib
 music21
 wandb
 tqdm
+nltk

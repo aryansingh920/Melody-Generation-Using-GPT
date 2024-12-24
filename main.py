@@ -7,31 +7,43 @@ Filename: main.py
 
 Relative Path: main.py
 """
-from gpt import GPTLanguageModel, generate_melody
-from train_with_viz import test_configs_with_tracking
-# from evaluation import main as evaluate_model
-# from melodyPlay import play_melody
+
 import os
+from train_with_viz import test_configs_with_tracking
+from evaluation import main as evaluate_models
+# from gpt import generate_melody
+# from melodyPlay import play_note_sequence
 
-# Step 1: Load Dataset
-data_path = "data/inputMelodiesAugmented.txt"
-with open(data_path, 'r', encoding='utf-8') as f:
-    data = f.read().splitlines()
 
-# Step 2: Train and Test Configurations
-print("Training model with multiple configurations...")
-best_model = test_configs_with_tracking()
+def main():
+    """
+    1) Trains multiple configurations of the GPT model using train_with_viz.py
+    2) Evaluates all saved models on specified test files using evaluation.py
+    3) (Optional) Generates melodies or plays them.
+    """
 
-# # Step 3: Evaluate Best Model
-# evaluation_metrics = evaluate_model(best_model, data)
-# print("Evaluation Metrics:", evaluation_metrics)
+    # Step 1: Train and test multiple configurations; returns the best model.
+    print("Training model with multiple configurations...")
+    best_model = test_configs_with_tracking()
 
-# # Step 4: Generate Melody
-# prompt = "R F G A "  # Example starting prompt for melody generation
-# generated_sequence = generate_melody(prompt, max_new_tokens=100)
-# print("Generated Melody:", generated_sequence)
+    # Step 2: Evaluate all saved models on multiple test sets
+    print("\nEvaluating saved models on the test sets...")
+    evaluation_results = evaluate_models()
+    print("Evaluation completed. Results have been saved to 'evaluation_results.json'.")
 
-# # Step 5: Play Generated Melody
-# output_file = "output/generated_melody.mid"
-# play_melody(generated_sequence, output_file)
-# print(f"Generated melody saved and played from {output_file}")
+    # ----------------------------------------------------------------------------
+    # Uncomment the lines below if you want to generate or play melodies directly:
+    #
+    # Step 3: Generate a melody from the best model
+    # prompt = "R F G A "  # example prompt
+    # generated_melody = generate_melody(prompt, max_new_tokens=100)
+    # print("\nGenerated Melody:\n", generated_melody)
+    #
+    # Step 4: Play the generated melody (requires pydub & simpleaudio)
+    # play_note_sequence(generated_melody.split(), duration_ms=500)
+    #
+    # ----------------------------------------------------------------------------
+
+
+if __name__ == "__main__":
+    main()

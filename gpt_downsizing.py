@@ -1,9 +1,18 @@
+"""
+Created on 24/12/2024
+
+@author: Aryan
+
+Filename: gpt_downsizing.py
+
+Relative Path: gpt_downsizing.py
+"""
+
 from MelodyDataset import ModelConfig
 
 # gpt_downsizing.py - Updated for melody generation dataset
 
 # Initial downsize configuration
-
 
 
 def create_custom_config():

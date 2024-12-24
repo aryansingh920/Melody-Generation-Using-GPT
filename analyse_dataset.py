@@ -8,8 +8,6 @@ Filename: analyse_dataset.py
 Relative Path: analyse_dataset.py
 """
 
-
-
 import matplotlib.pyplot as plt
 from collections import Counter
 
@@ -75,6 +73,7 @@ def plot_sequence_lengths(sequence_lengths, save_path):
     plt.show()
 
 
-# Analyze the dataset
+# Example usage:
 # analyze_dataset("data/inputMelodies.txt")
-analyze_dataset("data/inputMelodiesAugmented.txt")
+if __name__ == "__main__":
+    analyze_dataset("data/inputMelodiesAugmented.txt")

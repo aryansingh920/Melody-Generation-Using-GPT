@@ -27,18 +27,18 @@ class ModelConfig:
     max_iters: int = 5000
     eval_interval: int = 100
     eval_iters: int = 50
-    device: torch.device = torch.device("mps") if torch.backends.mps.is_available() else torch.device(
-        "cuda" if torch.cuda.is_available() else "cpu")
+    device: torch.device = torch.device("mps") if torch.backends.mps.is_available(
+    ) else torch.device("cuda" if torch.cuda.is_available() else "cpu")
     file_name: str = "input_childSpeech_trainingSet.txt"
 
 
 class MelodyDataset(Dataset):
     def __init__(self, file_path, block_size):
         # Load the augmented dataset
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             data = f.read()
 
-        # Tokenize data
+        # Tokenize data (character level)
         self.tokens = list(data)
         self.vocab = sorted(set(self.tokens))
         self.stoi = {ch: i for i, ch in enumerate(self.vocab)}

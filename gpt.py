@@ -14,8 +14,10 @@ from torch.nn import functional as F
 from tqdm import tqdm
 import wandb
 
+# We'll import the ModelConfig from MelodyDataset for consistent usage
+from MelodyDataset import ModelConfig
 
-# hyperparameters
+# Default hyperparameters (overwritten by config if needed)
 batch_size = 16
 block_size = 32
 n_embd = 32
@@ -28,17 +30,13 @@ eval_interval = 100
 eval_iters = 50
 device = torch.device("mps") if torch.backends.mps.is_available(
 ) else torch.device("cuda" if torch.cuda.is_available() else "cpu")
-fileName = "data/inputMelodiesAugmented.txt"  # Updated to use melody dataset
-# ------------
+fileName = "data/inputMelodiesAugmented.txt"
 
 
-torch.manual_seed(1337)
-
-
-def update_model_config(config):
-    """Update global model configuration variables"""
+def update_model_config(config: ModelConfig):
+    """Update global model configuration variables from a ModelConfig."""
     global batch_size, block_size, max_iters, eval_interval, learning_rate
-    global n_embd, n_head, n_layer, dropout, device
+    global n_embd, n_head, n_layer, dropout, device, fileName
 
     batch_size = config.batch_size
     block_size = config.block_size
@@ -49,52 +47,82 @@ def update_model_config(config):
     learning_rate = config.learning_rate
     max_iters = config.max_iters
     eval_interval = config.eval_interval
+    device = config.device
+    fileName = config.file_name
 
 
-# Load the melody dataset
+def load_data(config: ModelConfig):
+    """
+    Load data from the file specified in config, and split into train and val sets.
+    Returns (train_data, val_data, encode, decode, vocab_size).
+    """
+    with open(config.file_name, 'r', encoding='utf-8') as f:
+        text = f.read()
+
+    # Identify the unique characters
+    chars = sorted(list(set(text)))
+    vocab_size = len(chars)
+
+    stoi = {ch: i for i, ch in enumerate(chars)}
+    itos = {i: ch for i, ch in enumerate(chars)}
+
+    def encode(s: str):
+        return [stoi[c] for c in s]
+
+    def decode(l: list):
+        return ''.join([itos[i] for i in l])
+
+    data = torch.tensor(encode(text), dtype=torch.long)
+    n = int(0.9 * len(data))
+    train_data = data[:n]
+    val_data = data[n:]
+    return train_data, val_data, encode, decode, vocab_size
+
+
+# Data loading for training (global variables for convenience)
 with open(fileName, 'r', encoding='utf-8') as f:
     text = f.read()
 
-# here are all the unique characters that occur in this text
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
-# create a mapping from characters to integers
 stoi = {ch: i for i, ch in enumerate(chars)}
 itos = {i: ch for i, ch in enumerate(chars)}
-# encoder: take a string, output a list of integers
-def encode(s): return [stoi[c] for c in s]
-# decoder: take a list of integers, output a string
-def decode(l): return ''.join([itos[i] for i in l])
 
 
-# Train and test splits
+def encode(s: str):
+    return [stoi[c] for c in s]
+
+
+def decode(l: list):
+    return ''.join([itos[i] for i in l])
+
+
 data = torch.tensor(encode(text), dtype=torch.long)
-n = int(0.9*len(data))  # first 90% will be trained, rest val
+n = int(0.9 * len(data))
 train_data = data[:n]
 val_data = data[n:]
 
-# data loading
 
-
-def get_batch(split):
-    # generate a small batch of data of inputs x and targets y
-    data = train_data if split == 'train' else val_data
-    ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.stack([data[i:i+block_size] for i in ix])
-    y = torch.stack([data[i+1:i+block_size+1] for i in ix])
+def get_batch(split='train'):
+    """Generate a small batch of data of inputs x and targets y."""
+    d = train_data if split == 'train' else val_data
+    ix = torch.randint(len(d) - block_size, (batch_size,))
+    x = torch.stack([d[i:i+block_size] for i in ix])
+    y = torch.stack([d[i+1:i+block_size+1] for i in ix])
     x, y = x.to(device), y.to(device)
     return x, y
 
 
 @torch.no_grad()
 def estimate_loss():
+    """Compute average loss on train and val sets for eval_iters iterations each."""
     out = {}
     model.eval()
     for split in ['train', 'val']:
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split)
-            logits, loss = model(X, Y)
+            _, loss = model(X, Y)
             losses[k] = loss.item()
         out[split] = losses.mean()
     model.train()
@@ -102,7 +130,7 @@ def estimate_loss():
 
 
 class Head(nn.Module):
-    """ one head of self-attention """
+    """One head of self-attention."""
 
     def __init__(self, head_size):
         super().__init__()
@@ -111,30 +139,23 @@ class Head(nn.Module):
         self.value = nn.Linear(n_embd, head_size, bias=False)
         self.register_buffer('tril', torch.tril(
             torch.ones(block_size, block_size)))
-
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        # input of size (batch, time-step, channels)
-        # output of size (batch, time-step, head size)
         B, T, C = x.shape
         k = self.key(x)   # (B,T,hs)
         q = self.query(x)  # (B,T,hs)
-        # compute attention scores ("affinities")
-        # (B, T, hs) @ (B, hs, T) -> (B, T, T)
-        wei = q @ k.transpose(-2, -1) * k.shape[-1]**-0.5
-        wei = wei.masked_fill(
-            self.tril[:T, :T] == 0, float('-inf'))  # (B, T, T)
-        wei = F.softmax(wei, dim=-1)  # (B, T, T)
+        wei = q @ k.transpose(-2, -1) * k.shape[-1] ** -0.5  # (B,T,T)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))  # (B,T,T)
+        wei = F.softmax(wei, dim=-1)
         wei = self.dropout(wei)
-        # perform the weighted aggregation of the values
         v = self.value(x)  # (B,T,hs)
-        out = wei @ v  # (B, T, T) @ (B, T, hs) -> (B, T, hs)
+        out = wei @ v  # (B,T,hs)
         return out
 
 
 class MultiHeadAttention(nn.Module):
-    """ multiple heads of self-attention in parallel """
+    """Multiple heads of self-attention in parallel."""
 
     def __init__(self, num_heads, head_size):
         super().__init__()
@@ -149,7 +170,7 @@ class MultiHeadAttention(nn.Module):
 
 
 class FeedFoward(nn.Module):
-    """ a simple linear layer followed by a non-linearity """
+    """A simple linear layer followed by a non-linearity."""
 
     def __init__(self, n_embd):
         super().__init__()
@@ -165,10 +186,9 @@ class FeedFoward(nn.Module):
 
 
 class Block(nn.Module):
-    """ Transformer block: communication followed by computation """
+    """Transformer block: communication followed by computation."""
 
     def __init__(self, n_embd, n_head):
-        # n_embd: embedding dimension, n_head: the number of heads we'd like
         super().__init__()
         head_size = n_embd // n_head
         self.sa = MultiHeadAttention(n_head, head_size)
@@ -183,18 +203,25 @@ class Block(nn.Module):
 
 
 class GPTLanguageModel(nn.Module):
-
-    def __init__(self):
+    def __init__(self, config: ModelConfig = None, vocab_size_override: int = None):
+        """
+        If config is provided, we can set model dimensions from config.
+        If vocab_size_override is provided, use that for final layer. Otherwise, use global vocab_size.
+        """
         super().__init__()
-        # each token directly reads off the logits for the next token from a lookup table
-        self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
+
+        if config is not None:
+            update_model_config(config)
+
+        vsz = vocab_size_override if vocab_size_override is not None else vocab_size
+
+        self.token_embedding_table = nn.Embedding(vsz, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
         self.blocks = nn.Sequential(
             *[Block(n_embd, n_head=n_head) for _ in range(n_layer)])
         self.ln_f = nn.LayerNorm(n_embd)  # final layer norm
-        self.lm_head = nn.Linear(n_embd, vocab_size)
+        self.lm_head = nn.Linear(n_embd, vsz)
 
-        # better init, not covered in the original GPT video, but important, will cover in followup video
         self.apply(self._init_weights)
 
     def _init_weights(self, module):
@@ -207,19 +234,16 @@ class GPTLanguageModel(nn.Module):
 
     def forward(self, idx, targets=None):
         B, T = idx.shape
-
-        # idx and targets are both (B,T) tensor of integers
         tok_emb = self.token_embedding_table(idx)  # (B,T,C)
         pos_emb = self.position_embedding_table(
-            torch.arange(T, device=device))  # (T,C)
+            torch.arange(T, device=idx.device))  # (T,C)
         x = tok_emb + pos_emb  # (B,T,C)
         x = self.blocks(x)  # (B,T,C)
         x = self.ln_f(x)  # (B,T,C)
         logits = self.lm_head(x)  # (B,T,vocab_size)
 
-        if targets is None:
-            loss = None
-        else:
+        loss = None
+        if targets is not None:
             B, T, C = logits.shape
             logits = logits.view(B*T, C)
             targets = targets.view(B*T)
@@ -227,25 +251,31 @@ class GPTLanguageModel(nn.Module):
 
         return logits, loss
 
-    def generate(self, idx, max_new_tokens):
-        # idx is (B, T) array of indices in the current context
+    @torch.no_grad()
+    def generate(self, idx, max_new_tokens=100):
+        """
+        Generate new tokens from the model, given a prompt idx of shape (B, T).
+        """
         for _ in range(max_new_tokens):
-            # crop idx to the last block_size tokens
             idx_cond = idx[:, -block_size:]
-            # get the predictions
             logits, loss = self(idx_cond)
-            # focus only on the last time step
-            logits = logits[:, -1, :]  # becomes (B, C)
-            # apply softmax to get probabilities
-            probs = F.softmax(logits, dim=-1)  # (B, C)
-            # sample from the distribution
-            idx_next = torch.multinomial(probs, num_samples=1)  # (B, 1)
-            # append sampled index to the running sequence
-            idx = torch.cat((idx, idx_next), dim=1)  # (B, T+1)
+            logits = logits[:, -1, :]  # Focus on last time step
+            probs = F.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat((idx, idx_next), dim=1)
         return idx
 
 
-# Initialize wandb
+def generate_melody(prompt, max_new_tokens=100):
+    """Generate a melody given a text prompt (e.g., 'R F G A ')."""
+    model.eval()
+    context = torch.tensor([stoi[ch] for ch in prompt if ch in stoi],
+                           dtype=torch.long).unsqueeze(0).to(device)
+    generated = model.generate(context, max_new_tokens)
+    return decode(generated[0].tolist())
+
+
+# Initialize the global model for training usage below
 wandb.init(project="gpt-melody-generation", config={
     "batch_size": batch_size,
     "block_size": block_size,
@@ -260,16 +290,13 @@ wandb.init(project="gpt-melody-generation", config={
 
 model = GPTLanguageModel()
 m = model.to(device)
-# print the number of parameters in the model
 print(sum(p.numel() for p in m.parameters())/1e6, 'M parameters')
 
-# create a PyTorch optimizer
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 # Training loop with tqdm
 pbar = tqdm(range(max_iters), desc="Training")
 for iter in pbar:
-    # every once in a while evaluate the loss on train and val sets
     if iter % eval_interval == 0 or iter == max_iters - 1:
         losses = estimate_loss()
         print(
@@ -284,43 +311,26 @@ for iter in pbar:
             'val_loss': f"{losses['val']:.4f}"
         })
 
-    # sample a batch of data
     xb, yb = get_batch('train')
-
-    # evaluate the loss
     logits, loss = model(xb, yb)
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
 
-    # Log training metrics
     wandb.log({"batch_loss": loss.item(), "step": iter})
 
-# generate from the model
+# Final generation after training
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 generated_text = decode(m.generate(context, max_new_tokens=500)[0].tolist())
 print(generated_text)
 wandb.log({"generated_sample": generated_text})
 
-
-def generate_melody(prompt, max_new_tokens=100):
-    """Generate a melody given a prompt."""
-    model.eval()
-    context = torch.tensor(
-        [stoi[ch] for ch in prompt], dtype=torch.long
-    ).unsqueeze(0).to(device)
-
-    generated = model.generate(context, max_new_tokens)
-    return decode(generated[0].tolist())
-
-
-# Example: Generate melody from a prompt
+# Example generation from a prompt
 prompt = "R F G A "
 generated_melody = generate_melody(prompt)
 print("Generated Melody:", generated_melody)
 wandb.log({"prompt_generated_melody": generated_melody})
 
-# Save the generated melody to a file
 output_file = "output/generated_melody.txt"
 with open(output_file, 'w') as f:
     f.write(generated_melody)
