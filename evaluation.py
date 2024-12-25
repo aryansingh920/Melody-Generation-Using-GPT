@@ -165,8 +165,7 @@ def evaluate_on_test_set(model: GPTLanguageModel,
 def main():
     # Evaluate on these test files
     test_files = [
-        "input_childSpeech_testSet.txt",
-        "input_shakespeare.txt"
+        "data/inputMelodiesAugmented.txt",
     ]
 
     # Your saved model names
@@ -179,6 +178,8 @@ def main():
             model_name)
 
         model_results = {}
+        generated_samples = []  # List to store all generated samples
+
         for test_file in test_files:
             print(f"\nTesting on {test_file} ...")
             # Evaluate with BLEU on
@@ -195,11 +196,23 @@ def main():
             print("\nSample Generation:\n",
                   results['generated_text'][:200], "...")
 
+            # Store the generated sample
+            generated_samples.append(
+                f"Test File: {test_file}\nGenerated Sample:\n{results['generated_text']}\n\n"
+            )
+
             model_results[test_file] = results
+
         all_results[model_name] = model_results
 
+        # Save generated samples to a .txt file
+        output_file = f"output/{model_name}_generated_samples.txt"
+        with open(output_file, "w") as f:
+            f.write("\n".join(generated_samples))
+        print(f"Generated samples saved to {output_file}")
+
     # Dump results to JSON
-    with open('evaluation_results.json', 'w') as f:
+    with open('output/evaluation_results.json', 'w') as f:
         json_results = {}
         for model_nm, model_res in all_results.items():
             json_results[model_nm] = {}
