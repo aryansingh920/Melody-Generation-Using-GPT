@@ -1,0 +1,5 @@
+Test File: data/inputMelodiesAugmented.txt
+Generated Sample:
+
+R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R F D D G E R R R R R R R R R F G G A F F F D A A A F G A G G A R R R R R R A B A G G E G B E f E E E f G A A G f G G f D D E f G f E E f 
+

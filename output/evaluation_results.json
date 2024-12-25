@@ -1,0 +1,32 @@
+{
+    "Original": {
+        "data/inputMelodiesAugmented.txt": {
+            "test_loss": 0.8151840805847916,
+            "baseline_loss": 0.6952520677905929,
+            "perplexity": 2.2595915810077947,
+            "baseline_perplexity": 2.0042142081217884,
+            "improvement_ratio": 0.8528773860400185,
+            "bleu_score": 0.6428257805893294
+        }
+    },
+    "Deeper_Thinner": {
+        "data/inputMelodiesAugmented.txt": {
+            "test_loss": 0.8340272501929453,
+            "baseline_loss": 0.6952520677905929,
+            "perplexity": 2.302573130968893,
+            "baseline_perplexity": 2.0042142081217884,
+            "improvement_ratio": 0.833608335494736,
+            "bleu_score": 0.4637727085631261
+        }
+    },
+    "Wider_Shallower": {
+        "data/inputMelodiesAugmented.txt": {
+            "test_loss": 0.8321680936427062,
+            "baseline_loss": 0.6952520677905929,
+            "perplexity": 2.2982962639646027,
+            "baseline_perplexity": 2.0042142081217884,
+            "improvement_ratio": 0.8354707097062789,
+            "bleu_score": 0.3663394207936633
+        }
+    }
+}

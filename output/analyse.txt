@@ -1,0 +1,36 @@
+(.venv) (base) aryansingh@Aryans-MacBook-Air Melody-Generation-Using-GPT % python3 analyse_dataset.py
+File: data/inputMelodies.txt
+Total Length (characters): 347225
+Vocabulary Size: 15
+Most Common Tokens: [(' ', 173430), ('R', 41938), ('D', 13657), ('F', 12839), ('G', 11840)]
+Least Common Tokens: [('\n', 365), ('f', 9223), ('d', 9436), ('g', 9761), ('c', 9861)]
+Average Sequence Length: 950.30
+Median Sequence Length: 920
+
+Preview:
+R R R R R R F G F E D C G A G F A A A G F G F D D C G A G F R R F G F E D C G A G F A A A G F G F D D C G A G F R R F F F F G F C E G R R R C C C C A G F R R C C A A G F D F R D D D C G G G A G F R R F G F E D C G A G F A A A G F G F D D C G A G F R R F F F f G F C E G R R R C C C C A G F R R C C A A G F D F R D D D C G G G A G F R R F G F E D C G A G F A A A G F G F D D C G A G F R R F F F f G F C E G R R R C C C C A G F R R C C A A G F D F R D D D C G G G A G F R R F G F E D C G A G F A A A G 
+
+File: data/inputMelodiesAugmented.txt
+Total Length (characters): 710155
+Vocabulary Size: 14
+Most Common Tokens: [('f', 57500), ('G', 56862), ('F', 56206), ('d', 55957), ('A', 55370)]
+Least Common Tokens: [('\n', 1825), ('R', 50870), ('B', 52089), ('c', 52929), ('D', 53029)]
+Average Sequence Length: 388.13
+Median Sequence Length: 370
+
+Preview:
+RfgfFdcgagfaaagfgfddcgagfRfgfFdcgagfaaagfgfddcgagfRffffgfcFgRccccagfRccaagfdfRdddcgggagfRfgfFdcgagfaaagfgfddcgagfRfffGgfcFgRccccagfRccaagfdfRdddcgggagfRfgfFdcgagfaaagfgfddcgagfRfffGgfcFgRccccagfRccaagfdfRdddcgggagfRfgfFdcgagfaaagfgfddcgagfRaaagfgfddcgagfRaaagfgfddcgagf
+RAgBAAgBAfDBARDccBBAAfGAAERBacBGfAGEdfERABcDEfGBAGfRAgBAAgBAfDBARDccBBAAfGABRGAaaCDCaaARBAAcRBAAfRGABBcDcBBAABAGAfEGAfEEDRAgBAAgBAfDBARDccBBAAfGABRGAaaCDCaaARBAAcRBAAfRGABBcDcBBAABAGAfEGAfEEDRGAaaAcED
+RDdEdEdERDDdEdEdERDDdEFfFfFfF
+
+
+(.venv) (base) aryansingh@Aryans-MacBook-Air Melody-Generation-Using-GPT % python3.10 inspect_dataset.py 
+Total Lines: 1825
+Inconsistent Lines: 1825
+
+Sample of Inconsistent Lines:
+Line 1: R R R R R R R R R R R R R B c E E c c c c E E d R R R R R B B c E E c c c c E E d R R R R R c d E E d B g d d c c c B c B E E g g f g g A B c d E f R R R R R B B c E E c c c c E E d R R R R R B B c E E c c c c E E d R R R R R E E E E d B g d d c c c B c B E E g g f g g A B c d E f B B B g B f E g B f E g B f E c g A g g f B g B f E B g B f E B g B f E E g A g g f B g B f E B g B f E B g B f E B g B f E B g B f E R R g g B d E R R R R R R R R R R R R R R R R R R R R R R R d E d E d d g d c c c B c B g E g A E f g A B c E g f B g B f E g B f E g B f E c g A g g f B g B f E B g B f E B g B f E E g A g g f B g B f E B g B f E B g B f E B g B f E B g B f E G G E G E G G E G G E G G E G A B R R E G G E G E G G E G G E G G E D A G G G A f B B c E E c c c c E E d R R E B A g B B c E E c c c c E E d R R B B B g B f E g B f E g B f E c g A g g f B g B f E B g B f E B g B f E E g A g g f B g B f g B g f E G B g f E g E A g f B g c c E R R R g A B d E
+Line 2: R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R D c D B A f f A B c B f R R D c D B A A G f A B c B f R R D D E B A R R D D E B A B B D B D E f D A A G G f E D E f G A A B D B f D R E f A f D B A E G A B D B f D R E f D E D G f E f f E R R R R D c D B A f f A B c B f R R D c D B A A G f A B c B f R R D D E B A R R D D E B A B B D B D E f D A A G G f E D E f G A A B D B f D R E f A f D B A E G A B D B f D R E f D E D G f E f f E R R R R B D E f B D E B R R R R R D E D B f D D E D B f D E f R R R R R R R R R R R R R R R R R R R R A B A D B A A B A D B A R R R R R R R R R R R R R R R R A B A D B A A B A d C a C F G R R G F d F g C c a g C a a g F F G g g a g G F R a C d C G d R F G a G d C a F g a C d C G d R F G d F d g G F G G F
+Line 3: R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R F F F F F f g c c a c d F a a g a c a a g R R F F F F F f g c c a a g F c c a g a c F F d f f F R a g F F d c d F c d d c R R R a g a g R f f f g F d c d d c R R R R R R R R R R R R R R F F F F F f g c c a c d F a a g a c a a g R R F F F F F f g c c a a g F c c a g a c F F d f f F R a g F F d c d F c d d c R R R a g a g R f f f g F d c d d c G G G G G g a d d C d F G C C a C d C C a R R G G G G G g a d d C C a G d d C a C d G G F g g G R C a G G F d F G d F F d R R R C a C a R g g g a G F d F F d R R R G C C C C a R R g g g a G F d F F d R R G a C a G d C C a R R g g g a G F d d R R R R R G F d d R R R R R G F d F F d R R R R G a F d R R R R R F F d F F d R R R R F F d d R R R R R G a F d R R R R R G F d d
+Line 4: R R R R R R R R R R R R R R R R R R R R g A g A B g A R R g A R g A B f R R B g A R g A B g A R E B B A B B c c D B A A g A g A B g A R R g A R g A B f R R B g A R g A B g A R E B B A B B c c D B A c c B A A g A g A B c B A c c B A A g A g A B f A c c B A A g A A g A B c B A R A B B A c B D D D c A A E B g A g A B g A R R g A R g A B f R R B g A R g A B g A R E B B A B B c c D B A c c B A A g A g A B c B A c c B A A g A g A B f A c c B A A g A A g A B c B A R A B B A c B D D D c A A E B A f F E g A f E c B A c A f f E E c E f f E A c c A c B c g A B B A A c A f A A c c B A A c c B E E D C C B C B C D E D C E E D C C B C B C D A C E E D C C B C C B C D E D C R C D D C E D E E D C C B C B C D E D C E E D C C B C B C D A C E E D C C B C C B C D E D C R F F G B C B C D B C R R B C R B C D A
+Line 5: R R R R R A D E D B D B D A A D E D D B D B D A A D E f E E E D D R A D E f E E D E R f A A A A A f A R A A A B A A A f R R f f E E E D D B D E A A A A A A A B R A f f G f R G G F F F F G R A A B A R A D E D D D B D A R A D E D D B D B D A R A D E f E E E D D R A f f f E E E D E R f A B A A f A f B A B c D c B A B R f f E E D E R A D E E D R R R R R R R R R R R R R R A D E D B D B D A A D E D D B D B D A A D E f E E E D D R A D E f E E D E R f A A A A A f A R A A A B A A A f R R f f E E E D D B D E A A A A A A A B R A f f G f R G G F F F F G R A A B A R A D E D D D B D A R A D E D D B D B D A R A D E f E E E D D R A f f f E E E D E R f A B A A f A f B A B c D c B A B R f f E E D E R A D E E D f f f f f f f R f B A A f B A D R E f f f R E f f f D E f E D R f A A A f A B R R A B C A A f A E D R R R A A A A A A A R A D D A R R R A D E D D D B D A R A D E D D B D B D A R A D E f E E E D D R A f f f E E E D E R f A B A A f A f B A B c D c B A B R f f E E D E R A D E E D R R R R R B E f E E E c E B R B E f E E c E c E B R B E f g f f f E E R B g g g f f f E f R g B c B B g B g c B c d E d c B c R g g f f E f R B E f f E
