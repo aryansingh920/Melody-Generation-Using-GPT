@@ -45,7 +45,7 @@ def create_loss_comparison_plot(results: Dict[str, Dict[str, Dict[str, Any]]]):
     plt.xticks(x + width / 2, models, rotation=45)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
-    plt.savefig('test_loss_comparison.png', bbox_inches='tight')
+    plt.savefig('output/test_loss_comparison.png', bbox_inches='tight')
     plt.close()
 
 
@@ -70,7 +70,7 @@ def create_improvement_heatmap(results: Dict[str, Dict[str, Dict[str, Any]]]):
                 cmap='YlOrRd')
     plt.title('Improvement Over Baseline (Ratio)')
     plt.tight_layout()
-    plt.savefig('improvement_heatmap.png')
+    plt.savefig('output/improvement_heatmap.png')
     plt.close()
 
 
@@ -101,13 +101,13 @@ def create_perplexity_comparison(results: Dict[str, Dict[str, Dict[str, Any]]]):
     plt.xticks(x + width / 2, models, rotation=45)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
-    plt.savefig('perplexity_comparison.png', bbox_inches='tight')
+    plt.savefig('output/perplexity_comparison.png', bbox_inches='tight')
     plt.close()
 
 
 def main():
     # Load evaluation results
-    with open('evaluation_results.json', 'r') as f:
+    with open('output/evaluation_results.json', 'r') as f:
         results = json.load(f)
 
     # Create visualizations

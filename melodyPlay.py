@@ -77,5 +77,5 @@ def play_note_sequence(note_sequence, duration_ms=500):
 
 if __name__ == "__main__":
     print("Reading generated melody from file...")
-    note: str = read_text_file("output/generated_melody.txt").split()
-    play_note_sequence(note, 500)
+    note: str = read_text_file("output/Original_generated_samples.txt").split()
+    play_note_sequence(note[5:], 500)
