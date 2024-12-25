@@ -56,7 +56,7 @@ def create_sequence(note_sequence, duration_ms=500):
     return song
 
 
-def play_note_sequence(note_sequence, duration_ms=500):
+def play_note_sequence(file, note_sequence, duration_ms=500):
     # Example sequence (You can replace this with your sequence)
     # sequence = "C C G G A A G F F E E D D C G G F F E E D G G F F E E D C C G G A A G F F E E D D C".split()
     # Famous tune sequence: "Twinkle Twinkle Little Star"
@@ -67,15 +67,16 @@ def play_note_sequence(note_sequence, duration_ms=500):
         note_sequence, duration_ms=duration_ms)  # 500ms per note
 
     # Save the song to a .wav file
-    song.export("output/nursery_rhyme.wav", format="wav")
+    song.export(f"output/{file}_nursery_rhyme.wav", format="wav")
 
     # Play the .wav file using simpleaudio
-    wave_obj = sa.WaveObject.from_wave_file("output/nursery_rhyme.wav")
+    wave_obj = sa.WaveObject.from_wave_file(f"output/{file}_nursery_rhyme.wav")
     play_obj = wave_obj.play()
     play_obj.wait_done()
 
 
 if __name__ == "__main__":
     print("Reading generated melody from file...")
-    note: str = read_text_file("output/Original_generated_samples.txt").split()
-    play_note_sequence(note[5:], 500)
+    for file in ["Original_generated_samples.txt", "Deeper_Thinner_generated_samples.txt", "Wider_Shallower_generated_samples.txt"]:
+        note: str = read_text_file(f"output/{file}").split()
+        play_note_sequence(file, note[5:], 500)
